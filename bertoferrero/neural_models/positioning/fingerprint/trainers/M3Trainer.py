@@ -23,7 +23,7 @@ import pandas as pd
 
 class M3Trainer(BaseTrainer):
     @staticmethod
-    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42):
+    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
                
         #Definimos el nombre del modelo
         modelName = 'M3'
@@ -52,6 +52,10 @@ class M3Trainer(BaseTrainer):
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
         model.fit([X_train, Xmap_train], y_train, validation_data=([X_val, Xmap_val], y_val),
                             verbose=(1 if designing else 2), callbacks=[callback], batch_size=batch_size)
+
+        #Registramos hiperparámetros
+        if(hyperparams_log_path is not None):
+            BaseTrainer.automl_trials_logger(model.tuner, hyperparams_log_path, max_trials)
 
         # Evaluamos usando el test set
         score = model.evaluate([X_val, Xmap_val], y_val, verbose=0)

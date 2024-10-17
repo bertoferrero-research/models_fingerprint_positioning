@@ -25,7 +25,7 @@ import pandas as pd
 
 class M6Trainer(BaseTrainer):
     @staticmethod
-    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42):
+    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
                
         #Definimos el nombre del modelo y la configuración específica
         modelName = 'M6'
@@ -53,6 +53,10 @@ class M6Trainer(BaseTrainer):
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
         model, score = BaseTrainer.fit_autokeras(model, X_np, y_np, designing, batch_size, callbacks=[callback])
+
+        #Registramos hiperparámetros
+        if(hyperparams_log_path is not None):
+            BaseTrainer.automl_trials_logger(model.tuner, hyperparams_log_path, max_trials)
 
         # Devolvemos el modelo entrenado
         model = model.export_model()

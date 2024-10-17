@@ -24,7 +24,7 @@ from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import de
 
 class M8Trainer(BaseTrainer):
     @staticmethod
-    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42):
+    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
                
         #Definimos el nombre del modelo y la configuración específica
         modelName = 'M8'
@@ -120,6 +120,10 @@ class M8Trainer(BaseTrainer):
                         verbose=2,
                         batch_size=batch_size,
                         callbacks=[callback1, callback2, callback3, callbackTensor])
+
+        #Registramos hiperparámetros
+        if(hyperparams_log_path is not None):
+            BaseTrainer.automl_trials_logger(tuner, hyperparams_log_path, max_trials)
 
         # Devolvemos el modelo entrenado
         model = tuner.get_best_models()[0]
