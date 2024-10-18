@@ -43,7 +43,7 @@ class M2Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-        model, score = BaseTrainer.fit_autokeras(model, X_np, y_np, designing, batch_size, callbacks=[callback])
+        model, score = BaseTrainer.fit_general(model, X_np, y_np, designing, batch_size, callbacks=[callback])
 
         #Registramos hiperparámetros
         if(hyperparams_log_path is not None):
@@ -51,6 +51,24 @@ class M2Trainer(BaseTrainer):
 
         # Devolvemos el modelo entrenado
         model = model.export_model()
+
+        return model, score
+    
+    @staticmethod
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int):
+
+        #Cargamos los datos de entrenamiento
+        X, y = M2.load_traning_data(dataset_path, scaler_file)
+
+        #Instanciamos la clase del modelo
+        modelInstance = M2(X.shape[1], y.shape[1])
+
+        #Construimos el modelo
+        model = modelInstance.build_model()
+
+        #Entrenamos
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
+        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback])
 
         return model, score
     

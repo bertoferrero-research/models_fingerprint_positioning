@@ -29,7 +29,17 @@ class M2(ModelsBaseClass):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True)
 
     def build_model(self):
-        pass
+        input = tf.keras.layers.Input(shape=(self.inputlength,))     
+        layers = tf.keras.layers.Dense(1024, activation='relu')(input)
+        layers = tf.keras.layers.Dropout(0.25)(layers)
+        layers = tf.keras.layers.Dense(128, activation='relu')(layers)
+        layers = tf.keras.layers.Dense(16, activation='relu')(layers)
+        output = tf.keras.layers.Dense(self.outputlength, activation='linear')(layers)
+
+        model = tf.keras.models.Model(inputs=input, outputs=output)
+        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+
+        return model
 
     def build_model_autokeras(self, designing:bool, overwrite:bool, tuner:str , random_seed:int, autokeras_project_name:str, auokeras_folder:str, max_trials:int = 100):
         input = ak.Input()

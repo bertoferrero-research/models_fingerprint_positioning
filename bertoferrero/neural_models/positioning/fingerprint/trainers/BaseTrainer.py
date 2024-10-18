@@ -27,17 +27,21 @@ class BaseTrainer(ABC):
         pass
 
     @abstractmethod
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42):
+        pass
+
+    @abstractmethod
     def prediction(dataset_path: str, model_file: str, scaler_file: str):
         pass
 
     @staticmethod
-    def fit_autokeras(model, X, y, designing, batch_size, callbacks=None, test_size: float = 0.2):
+    def fit_general(model, X, y, designing, batch_size, callbacks=None, test_size: float = 0.2):
         # Particionamos
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=test_size)
         # Entrenamos
         model.fit(X_train, y_train, validation_data=(X_val, y_val),
-                  verbose=(1 if designing else 2), callbacks=callbacks, batch_size=batch_size)
+                  verbose=(1 if designing else 2), callbacks=callbacks, batch_size=batch_size, epochs=1000)
 
         # Evaluamos
         score = model.evaluate(X_val, y_val, verbose=0)
