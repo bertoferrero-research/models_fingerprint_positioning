@@ -29,7 +29,15 @@ class M7(ModelsBaseClass):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=False)
 
     def build_model(self):
-        pass
+        input = tf.keras.layers.Input(shape=(self.inputlength,)) 
+        layer = tf.keras.layers.Dense(16, activation='relu')(input)
+        layer = tf.keras.layers.Dense(32, activation='relu')(layer)
+        output = tf.keras.layers.Dense(42, activation='softmax')(layer)
+
+        model = tf.keras.models.Model(inputs=input, outputs=output)
+        model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+
+        return model
 
     def build_model_autokeras(self, designing:bool, overwrite:bool, tuner:str , random_seed:int, autokeras_project_name:str, auokeras_folder:str, max_trials:int = 100):
         input = ak.Input()
