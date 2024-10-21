@@ -304,6 +304,7 @@ def descale_pos_x(pos_x: pd.Series):
     scaler = get_scaler_pos_x()
     return scaler.inverse_transform(pos_x.values.reshape(-1, 1)).flatten()
 
+
 def descale_pos_x_np(pos_x: np.ndarray):
     """
     Descales the given position values using the scaler for pos_x.
@@ -317,6 +318,7 @@ def descale_pos_x_np(pos_x: np.ndarray):
     scaler = get_scaler_pos_x()
     return scaler.inverse_transform(pos_x.reshape(-1, 1)).flatten()
 
+
 def descale_pos_y(pos_y: pd.Series):
     """
     Desescala la posición y
@@ -327,6 +329,7 @@ def descale_pos_y(pos_y: pd.Series):
     """
     scaler = get_scaler_pos_y()
     return scaler.inverse_transform(pos_y.values.reshape(-1, 1)).flatten()
+
 
 def descale_pos_y_np(pos_y: np.ndarray):
     """
@@ -341,6 +344,7 @@ def descale_pos_y_np(pos_y: np.ndarray):
     scaler = get_scaler_pos_y()
     return scaler.inverse_transform(pos_y.reshape(-1, 1)).flatten()
 
+
 def descale_dataframe(data: pd.DataFrame):
     """
     Desescala un dataframe
@@ -353,6 +357,7 @@ def descale_dataframe(data: pd.DataFrame):
     data_scaled['pos_x'] = descale_pos_x(data['pos_x'])
     data_scaled['pos_y'] = descale_pos_y(data['pos_y'])
     return data_scaled
+
 
 def descale_numpy(data: np.ndarray):
     """
@@ -793,7 +798,7 @@ def cross_val_score_multi_input(model: tf.keras.Model, X, y, cv, loss, optimizer
 
 
 def plot_learning_curves(hist, save_file: str = None, show_plot: bool = True):
-    #Si no es diccionario bajamos al atributo history
+    # Si no es diccionario bajamos al atributo history
     if not isinstance(hist, dict):
         hist = hist.history
     plt.plot(hist['loss'])
@@ -810,6 +815,7 @@ def plot_learning_curves(hist, save_file: str = None, show_plot: bool = True):
     else:
         plt.close()
 
+
 def calculate_euclidean_distance(predictions: np.array, real_data: np.array) -> pd.DataFrame:
     """
     Calculate the Euclidean distance between predicted and real coordinates.
@@ -822,20 +828,21 @@ def calculate_euclidean_distance(predictions: np.array, real_data: np.array) -> 
         pandas.DataFrame: A DataFrame containing the predicted and real coordinates, their deviations, and the Euclidean distance.
     """
 
-    #Obtenemos las coordenadas
+    # Obtenemos las coordenadas
     predicted_x = predictions[:, 0]
     predicted_y = predictions[:, 1]
     real_x = real_data[:, 0]
     real_y = real_data[:, 1]
 
-    #Calculamos desviaciones
+    # Calculamos desviaciones
     deviation_x = np.abs(predicted_x - real_x)
     deviation_y = np.abs(predicted_y - real_y)
 
-    #La distancia euclidiana
-    euclidean_distance = np.sqrt(np.power(deviation_x, 2) + np.power(deviation_y, 2))
+    # La distancia euclidiana
+    euclidean_distance = np.sqrt(
+        np.power(deviation_x, 2) + np.power(deviation_y, 2))
 
-    #Componemos la salida
+    # Componemos la salida
     return pd.DataFrame({
         'predicted_x': predicted_x,
         'predicted_y': predicted_y,
@@ -865,7 +872,8 @@ def save_model(model, model_file: str):
             shutil.rmtree(model_file)
     model.save(model_file)
 
-def save_model_json(model, json_file:str, weights_file:Union[str, None]=None):
+
+def save_model_json(model, json_file: str, weights_file: Union[str, None] = None):
     """
     Save the model architecture as a JSON file and optionally save the model weights.
     Parameters:
@@ -875,7 +883,7 @@ def save_model_json(model, json_file:str, weights_file:Union[str, None]=None):
     Returns:
         None
     """
-    #https://www.tensorflow.org/guide/keras/serialization_and_saving#model_serialization
+    # https://www.tensorflow.org/guide/keras/serialization_and_saving#model_serialization
     json_config = model.to_json()
     f = open(json_file, "a")
     f.write(json_config)
@@ -884,7 +892,8 @@ def save_model_json(model, json_file:str, weights_file:Union[str, None]=None):
     if weights_file is not None:
         model.save_weights(weights_file)
 
-def load_model_json(json_file:str, weights_file:Union[str, None]=None) -> tf.keras.models.Model:
+
+def load_model_json(json_file: str, weights_file: Union[str, None] = None) -> tf.keras.models.Model:
     """
     Load a Keras model from a JSON file.
     Parameters:
@@ -902,6 +911,7 @@ def load_model_json(json_file:str, weights_file:Union[str, None]=None) -> tf.ker
 
     return model
 
+
 def save_history(history, history_file: str):
     '''
     Guarda el historial de un modelo en un fichero
@@ -909,7 +919,7 @@ def save_history(history, history_file: str):
         history (keras.history): historial a guardar
         history_file (str): ruta del fichero
     '''
-    #Si history es none, no guardamos nada
+    # Si history es none, no guardamos nada
     if history == None:
         return
     if os.path.exists(history_file):
@@ -919,6 +929,7 @@ def save_history(history, history_file: str):
             shutil.rmtree(history_file)
     with open(history_file, 'wb') as file_pi:
         pickle.dump(history.history, file_pi)
+
 
 def load_history(history_file: str):
     '''
@@ -933,13 +944,14 @@ def load_history(history_file: str):
             return pickle.load(file_pi)
     return None
 
+
 def set_random_seed_value(seed: int = 42):
     '''
     Establece la semilla aleatoria de numpy y tensorflow
     Args:
         seed (int): semilla aleatoria
     '''
-    os.environ['PYTHONHASHSEED']=str(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)
