@@ -65,6 +65,30 @@ class M7Trainer(BaseTrainer):
         return model, score
     
     @staticmethod
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int):
+
+        cell_amount_x = 7
+        cell_amount_y = 6
+
+        #Cargamos los datos de entrenamiento
+        X, y = M7.load_traning_data(dataset_path, scaler_file)
+        y = posXYlist_to_grid(y.to_numpy(), cell_amount_x, cell_amount_y)
+        #Convertimos a categorical
+        y = tf.keras.utils.to_categorical(y, num_classes=cell_amount_x*cell_amount_y)
+
+        #Instanciamos la clase del modelo
+        modelInstance = M7(X.shape[1], y.shape[1])
+
+        #Construimos el modelo
+        model = modelInstance.build_model()
+
+        #Entrenamos
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
+        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback])
+
+        return model, score
+    
+    @staticmethod
     def fine_tuning(model_file: str, dataset_path: str, scaler_file: str, tmp_dir: str, batch_size: int, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
             
         modelName = 'M7'
