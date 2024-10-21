@@ -809,6 +809,43 @@ def plot_learning_curves(hist, save_file: str = None, show_plot: bool = True):
         plt.show()
     else:
         plt.close()
+
+def calculate_euclidean_distance(predictions: np.array, real_data: np.array) -> pd.DataFrame:
+    """
+    Calculate the Euclidean distance between predicted and real coordinates.
+
+    Args:
+        predictions (np.array): A numpy array of predicted coordinates, where each coordinate is a list [x, y].
+        real_data (np.array): A numpy array of real coordinates, where each coordinate is a list [x, y].
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the predicted and real coordinates, their deviations, and the Euclidean distance.
+    """
+
+    #Obtenemos las coordenadas
+    predicted_x = predictions[:, 0]
+    predicted_y = predictions[:, 1]
+    real_x = real_data[:, 0]
+    real_y = real_data[:, 1]
+
+    #Calculamos desviaciones
+    deviation_x = np.abs(predicted_x - real_x)
+    deviation_y = np.abs(predicted_y - real_y)
+
+    #La distancia euclidiana
+    euclidean_distance = np.sqrt(np.power(deviation_x, 2) + np.power(deviation_y, 2))
+
+    #Componemos la salida
+    return pd.DataFrame({
+        'predicted_x': predicted_x,
+        'predicted_y': predicted_y,
+        'real_x': real_x,
+        'real_y': real_y,
+        'deviation_x': deviation_x,
+        'deviation_y': deviation_y,
+        'euclidean_distance': euclidean_distance
+    })
+
 # endregion
 
 # region Herramientas generales
