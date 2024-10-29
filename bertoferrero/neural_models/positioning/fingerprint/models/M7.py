@@ -33,7 +33,7 @@ class M7(ModelsBaseClass):
         layer = tf.keras.layers.Dense(16, activation='relu')(input)
         layer = tf.keras.layers.Dense(32, activation='relu')(layer)        
         if empty_values:
-            layers = tf.keras.layers.Dropout(0.5)(layers)
+            layer = tf.keras.layers.Dropout(0.5)(layer)
         output = tf.keras.layers.Dense(42, activation='softmax')(layer)
 
         model = tf.keras.models.Model(inputs=input, outputs=output)
