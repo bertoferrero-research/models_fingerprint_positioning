@@ -28,14 +28,19 @@ class M7(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=False)
 
-    def build_model(self):
+    def build_model(self, empty_values: bool = False):
         input = tf.keras.layers.Input(shape=(self.inputlength,)) 
         layer = tf.keras.layers.Dense(16, activation='relu')(input)
-        layer = tf.keras.layers.Dense(32, activation='relu')(layer)
+        layer = tf.keras.layers.Dense(32, activation='relu')(layer)        
+        if empty_values:
+            layers = tf.keras.layers.Dropout(0.5)(layers)
         output = tf.keras.layers.Dense(42, activation='softmax')(layer)
 
         model = tf.keras.models.Model(inputs=input, outputs=output)
-        model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+        if not empty_values:
+            model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+        else:
+            model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.SGD(learning_rate=0.1), metrics=['mse', 'accuracy'] )
 
         return model
 

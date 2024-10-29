@@ -29,7 +29,7 @@ class M1(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True)
 
-    def build_model(self):
+    def build_model(self, empty_values: bool = False):
         input = tf.keras.layers.Input(shape=self.inputlength)        
         hiddenLayerLength = round(self.inputlength*2/3+self.outputlength, 0)
         hiddenLayer = tf.keras.layers.Dense(hiddenLayerLength, activation='relu')(input)

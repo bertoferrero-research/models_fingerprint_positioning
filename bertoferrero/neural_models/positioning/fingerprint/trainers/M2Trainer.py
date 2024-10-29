@@ -55,7 +55,7 @@ class M2Trainer(BaseTrainer):
         return model, score
     
     @staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int):
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False):
 
         #Cargamos los datos de entrenamiento
         X, y = M2.load_traning_data(dataset_path, scaler_file)
@@ -64,7 +64,7 @@ class M2Trainer(BaseTrainer):
         modelInstance = M2(X.shape[1], y.shape[1])
 
         #Construimos el modelo
-        model = modelInstance.build_model()
+        model = modelInstance.build_model(empty_values)
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)

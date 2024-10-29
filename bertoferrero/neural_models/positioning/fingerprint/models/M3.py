@@ -29,7 +29,7 @@ class M3(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, include_pos_z=False, scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True)
 
-    def build_model(self):
+    def build_model(self, empty_values: bool = False):
         pass
 
     def build_model_autokeras(self, designing:bool, overwrite:bool, tuner:str , random_seed:int, autokeras_project_name:str, auokeras_folder:str, max_trials:int = 100):

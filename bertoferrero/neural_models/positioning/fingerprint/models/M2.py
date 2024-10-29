@@ -28,16 +28,26 @@ class M2(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True)
 
-    def build_model(self):
+    def build_model(self, empty_values: bool = False):
         input = tf.keras.layers.Input(shape=(self.inputlength,))     
         layers = tf.keras.layers.Dense(1024, activation='relu')(input)
-        layers = tf.keras.layers.Dropout(0.25)(layers)
+        if not empty_values:
+            layers = tf.keras.layers.Dropout(0.25)(layers)
+        else:
+            layers = tf.keras.layers.Dropout(0.5)(layers)
+
         layers = tf.keras.layers.Dense(128, activation='relu')(layers)
         layers = tf.keras.layers.Dense(16, activation='relu')(layers)
+        if empty_values:
+            layers = tf.keras.layers.Dropout(0.25)(layers)
+            
         output = tf.keras.layers.Dense(self.outputlength, activation='linear')(layers)
 
         model = tf.keras.models.Model(inputs=input, outputs=output)
-        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+        if not empty_values:
+            model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
+        else:
+            model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), metrics=['mse', 'accuracy'] )
 
         return model
 
