@@ -28,7 +28,14 @@ class M7(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=False)
 
-    def build_model(self, empty_values: bool = False):
+    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None):
+        tf.random.set_seed(random_seed)
+        np.random.seed(random_seed)
+
+        #Cargamos el modelo partiendo de una base o integramente desde la api
+        if base_model_path is not None:
+            return self._build_model_from_base(base_model_path=base_model_path, loss='categorical_crossentropy', metrics=['mse', 'accuracy'])
+
         input = tf.keras.layers.Input(shape=(self.inputlength,)) 
         layer = tf.keras.layers.Dense(16, activation='relu')(input)
         layer = tf.keras.layers.Dense(32, activation='relu')(layer)        

@@ -65,7 +65,7 @@ class M7Trainer(BaseTrainer):
         return model, score
     
     @staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False):
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None):
 
         cell_amount_x = 7
         cell_amount_y = 6
@@ -80,7 +80,7 @@ class M7Trainer(BaseTrainer):
         modelInstance = M7(X.shape[1], y.shape[1])
 
         #Construimos el modelo
-        model = modelInstance.build_model(empty_values)
+        model = modelInstance.build_model(random_seed=random_seed, empty_values=empty_values, base_model_path=base_model_path)
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)

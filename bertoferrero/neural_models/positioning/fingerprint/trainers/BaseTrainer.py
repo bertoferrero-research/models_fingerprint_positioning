@@ -27,7 +27,7 @@ class BaseTrainer(ABC):
         pass
 
     @abstractmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42):
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None):
         pass
 
     @abstractmethod
