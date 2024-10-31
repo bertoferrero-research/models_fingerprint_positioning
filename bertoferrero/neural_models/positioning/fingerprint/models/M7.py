@@ -18,6 +18,7 @@ import tensorflow as tf
 import autokeras as ak
 from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import load_data
 from .ModelsBaseClass import ModelsBaseClass
+import random
 
 class M7(ModelsBaseClass): 
     @staticmethod
@@ -31,6 +32,7 @@ class M7(ModelsBaseClass):
     def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None):
         tf.random.set_seed(random_seed)
         np.random.seed(random_seed)
+        random.seed(random_seed)
 
         #Cargamos el modelo partiendo de una base o integramente desde la api
         if base_model_path is not None:
