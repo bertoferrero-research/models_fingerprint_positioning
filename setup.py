@@ -21,7 +21,7 @@ setup(
     install_requires=[
         'tensorflow',
         'scikit-learn',
-        'autokeras>=2.0.0',
+        'autokeras',
         'keras-tuner'
     ],
     license='Apache License 2.0', 
