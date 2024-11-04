@@ -38,25 +38,24 @@ class M2(ModelsBaseClass):
         if base_model_path is not None:
             return self._build_model_from_base(base_model_path=base_model_path, loss='mse', metrics=['mse', 'accuracy'])
 
-        input = tf.keras.layers.Input(shape=(self.inputlength,))     
-        layers = tf.keras.layers.Dense(1024, activation='relu')(input)
-        if not empty_values:
-            layers = tf.keras.layers.Dropout(0.25)(layers)
-        else:
-            layers = tf.keras.layers.Dropout(0.5)(layers)
+        input_layer = tf.keras.layers.Input(shape=(self.inputlength,))
+        layers = tf.keras.layers.Dense(1024, activation='relu')(input_layer)
+        
+        dropout_rate_1 = 0.25 if not empty_values else 0.5
+        layers = tf.keras.layers.Dropout(dropout_rate_1)(layers)
 
         layers = tf.keras.layers.Dense(128, activation='relu')(layers)
         layers = tf.keras.layers.Dense(16, activation='relu')(layers)
+        
         if empty_values:
             layers = tf.keras.layers.Dropout(0.25)(layers)
-            
-        output = tf.keras.layers.Dense(self.outputlength, activation='linear')(layers)
+        
+        output_layer = tf.keras.layers.Dense(self.outputlength, activation='linear')(layers)
 
-        model = tf.keras.models.Model(inputs=input, outputs=output)
-        if not empty_values:
-            model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
-        else:
-            model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), metrics=['mse', 'accuracy'] )
+        model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
+        
+        learning_rate = 0.001 if not empty_values else 0.0001
+        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate), metrics=['mse', 'accuracy'])
 
         return model
 

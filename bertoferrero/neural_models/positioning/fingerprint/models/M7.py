@@ -38,18 +38,18 @@ class M7(ModelsBaseClass):
         if base_model_path is not None:
             return self._build_model_from_base(base_model_path=base_model_path, loss='categorical_crossentropy', metrics=['mse', 'accuracy'])
 
-        input = tf.keras.layers.Input(shape=(self.inputlength,)) 
-        layer = tf.keras.layers.Dense(16, activation='relu')(input)
-        layer = tf.keras.layers.Dense(32, activation='relu')(layer)        
+        input_layer = tf.keras.layers.Input(shape=(self.inputlength,))
+        layer = tf.keras.layers.Dense(16, activation='relu')(input_layer)
+        layer = tf.keras.layers.Dense(32, activation='relu')(layer)
+        
         if empty_values:
             layer = tf.keras.layers.Dropout(0.5)(layer)
-        output = tf.keras.layers.Dense(42, activation='softmax')(layer)
-
-        model = tf.keras.models.Model(inputs=input, outputs=output)
-        if not empty_values:
-            model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), metrics=['mse', 'accuracy'] )
-        else:
-            model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.SGD(learning_rate=0.1), metrics=['mse', 'accuracy'] )
+        
+        output_layer = tf.keras.layers.Dense(42, activation='softmax')(layer)
+        model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
+        
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.001) if not empty_values else tf.keras.optimizers.SGD(learning_rate=0.1)
+        model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['mse', 'accuracy'])
 
         return model
 
