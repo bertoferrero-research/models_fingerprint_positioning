@@ -956,6 +956,11 @@ def set_random_seed_value(seed: int = 42):
     np.random.seed(seed)
     tf.random.set_seed(seed)
 
+    # Configuraciones adicionales para TensorFlow
+    session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+    sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+    tf.compat.v1.keras.backend.set_session(sess)
+
 # endregion
 
 # region Deprecateds
