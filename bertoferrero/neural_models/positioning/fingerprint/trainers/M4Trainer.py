@@ -64,6 +64,33 @@ class M4Trainer(BaseTrainer):
         model = model.export_model()
 
         return model, score
+    
+    staticmethod
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None):
+
+        #Cargamos los datos de entrenamiento
+        X, y, Xmap = M4.load_traning_data(dataset_path, scaler_file)
+
+        #Instanciamos la clase del modelo
+        modelInstance = M4(X.shape[1], y.shape[1])
+
+        #Construimos el modelo
+        model = modelInstance.build_model(empty_values=empty_values, random_seed=random_seed, base_model_path=base_model_path)
+
+        # Convertir X y y a numpy.ndarray (autokeras input require de numpy.ndarray o tf.data.Dataset)
+        X_np = X.values if isinstance(X, pd.DataFrame) else X
+        y_np = y.values if isinstance(y, pd.DataFrame) else y
+
+        # Entrenamos
+        callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
+        X_train, X_val, y_train, y_val, Xmap_train, Xmap_val = train_test_split(
+            X_np, y_np, Xmap, test_size=0.2)
+        
+        model.fit([X_train, Xmap_train], y_train, validation_data=([X_val, Xmap_val], y_val),
+                  verbose=False, callbacks=[callback], batch_size=batch_size, epochs=1000)
+        score = model.evaluate([X_val, Xmap_val], y_val, verbose=0)
+
+        return model, score
 
     @staticmethod
     def prediction(dataset_path: str, model_file: str, scaler_file: str):
