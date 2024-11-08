@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GroupShuffleSplit
 import tensorflow as tf
 from abc import ABC, abstractmethod
 import keras_tuner
 import autokeras as ak
 from typing import Union
 import csv
+import numpy as np
+import pandas as pd
 
 
 class BaseTrainer(ABC):
@@ -35,10 +37,35 @@ class BaseTrainer(ABC):
         pass
 
     @staticmethod
-    def fit_general(model, X, y, designing, batch_size, callbacks=None, test_size: float = 0.2):
+    def fit_general(model, X, y, designing, batch_size, random_seed, callbacks=None, test_size: float = 0.2):
+
+        # #region particionamos agrupando
+
+        # # Combina las columnas 'pos_x' y 'pos_y' en una sola columna de grupos
+        # # Asegúrate de que X y y sean DataFrames de pandas
+        # if isinstance(X, np.ndarray):
+        #     X = pd.DataFrame(X)
+        # if isinstance(y, np.ndarray):
+        #     y = pd.DataFrame(y)
+
+        # # Usa todas las columnas de y para la agrupación
+        # pos = y.apply(tuple, axis=1)
+
+        # # Crea el objeto GroupShuffleSplit
+        # gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_seed)
+
+        # # Realiza el split
+        # train_idx, val_idx = next(gss.split(X, y, groups=pos))
+
+        # # Divide los datos en conjuntos de entrenamiento y validación
+        # X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+        # y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+
+        # #endregion
+
         # Particionamos
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=test_size)
+            X, y, test_size=test_size, random_state=random_seed)
         # Entrenamos
         model.fit(X_train, y_train, validation_data=(X_val, y_val),
                   verbose=(1 if designing else 2), callbacks=callbacks, batch_size=batch_size, epochs=1000)

@@ -53,7 +53,7 @@ class M7Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
-        model, score = BaseTrainer.fit_general(model, X_np, y_np, designing, batch_size, callbacks=[callback])
+        model, score = BaseTrainer.fit_general(model, X_np, y_np, designing, batch_size, callbacks=[callback], random_seed=random_seed)
 
         #Registramos hiperparámetros
         if(hyperparams_log_path is not None):
@@ -84,7 +84,7 @@ class M7Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
-        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback])
+        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)
 
         return model, score
     
