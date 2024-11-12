@@ -56,7 +56,7 @@ class BaseFineTuner(ABC):
                     list(trial.hyperparameters.values.values()) + [trial.score])
 
     @staticmethod
-    def base_fine_tuning(modelName: str, X: any, y: any, hyperModel: Union[str, None], tunerObjectives: any, callbacks: list, tmp_dir: str, batch_size: int, overwrite: bool, model_file: Union[str, None] = None, learning_rate_max: Union[float, None] = None, learning_rate_min: Union[float, None] = None, training_optimizer: Union[str, None] = None, training_loss: Union[str, None] = None, training_metrics: Union[list, None] = None, test_size: float = 0.2, max_trials: int = 100, random_seed: int = 42):
+    def base_fine_tuning(modelName: str, X: any, y: any, hyperModel: Union[str, None], tunerObjectives: any, tmp_dir: str, batch_size: int, overwrite: bool, model_file: Union[str, None] = None, learning_rate_max: Union[float, None] = None, learning_rate_min: Union[float, None] = None, training_optimizer: Union[str, None] = None, training_loss: Union[str, None] = None, training_metrics: Union[list, None] = None, test_size: float = 0.2, max_trials: int = 100, random_seed: int = 42, hyperparams_log_path: str = None, build_callbacks_fn=None):
         """
         Fine-tunes a base model using hyperparameter tuning.
         Args:
@@ -65,7 +65,6 @@ class BaseFineTuner(ABC):
             y (any): The target data for training.
             hyperModel (Union[str, None]): The hypermodel to use for tuning. If None, the hyperparameters must be defined individually.
             tunerObjectives (any): The objectives to optimize during tuning.
-            callbacks (list): List of Keras callbacks to apply during training.
             tmp_dir (str): The directory to store the tuning results.
             batch_size (int): The batch size for training.
             overwrite (bool): Whether to overwrite existing tuning results.
@@ -78,13 +77,27 @@ class BaseFineTuner(ABC):
             test_size (float, optional): The ratio of test data to split from the training data. Defaults to 0.2.
             max_trials (int, optional): The maximum number of trials for tuning. Defaults to 100.
             random_seed (int, optional): The random seed for reproducibility. Defaults to 42.
+            hyperparams_log_path (string, optional): The log file path where the hyperparams tests will be dumped.
+            build_callbacks_fn (function, optional): A function that allows to define a list of callbacks by employing the tuner hyperparameters search. Defaults to None.
         Returns:
             tuple: A tuple containing the trained model and the evaluation score.
         """
+        # Convertir X e y a numpy si no lo son
+        if not isinstance(X, np.ndarray):
+            X = np.array(X)
+        if not isinstance(y, np.ndarray):
+            y = np.array(y)
+
 
         # Preparamos datos de entrenamiento
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=test_size)
+        if len(X.shape) == 3:
+            splited_data = train_test_split(*X, y, test_size=test_size)            
+            y_train, y_val = splited_data[-2], splited_data[-1]
+            X_train = splited_data[:-2][0::2]
+            X_val = splited_data[:-2][1::2]
+        else:
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=test_size)
 
         # Si el hyperModel no está definido, lo definimos aqui
         if hyperModel is None:
@@ -144,18 +157,22 @@ class BaseFineTuner(ABC):
             seed=random_seed
         )
 
+        # Definimos los callbacks usando los hiperparámetros del tuner
+        if build_callbacks_fn is None:
+            build_callbacks_fn = lambda hp: []            
+
         tuner.search(X_train, y_train, epochs=1000, validation_data=(X_val, y_val),
                      verbose=2,
                      batch_size=batch_size,
-                     callbacks=callbacks)
+                     callbacks=build_callbacks_fn(tuner.oracle.hyperparameters))
+        
+        #Registramos hiperparámetros
+        if(hyperparams_log_path is not None):
+            BaseFineTuner.automl_trials_logger(model.tuner, hyperparams_log_path, max_trials)
 
         # Devolvemos el modelo entrenado
         model = tuner.get_best_models()[0]
         model.build(input_shape=(X.shape[1],))
         score = model.evaluate(X_val, y_val, verbose=0)
-
-        # Imprimimos la mejor configuración
-        best_hps = tuner.get_best_hyperparameters()[0]
-        print(best_hps.values)
 
         return model, score

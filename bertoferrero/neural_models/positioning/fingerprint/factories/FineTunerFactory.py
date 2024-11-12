@@ -17,6 +17,18 @@ import bertoferrero.neural_models.positioning.fingerprint.finetuners as tuners
 class FineTunerFactory:
     @staticmethod
     def retrieve_finetuner(model_type):
+        """
+        Retrieve the appropriate fine-tuner class based on the given model type.
+
+        Args:
+            model_type (str): The type of the model. Expected values are "M2", "M4", or "M7".
+
+        Returns:
+            class: The fine-tuner class corresponding to the specified model type.
+
+        Raises:
+            ValueError: If the provided model type is not one of the expected values.
+        """
         if model_type == "M2":
             return tuners.M2FineTuner
         elif model_type == "M4":   

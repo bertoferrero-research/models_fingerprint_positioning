@@ -42,10 +42,13 @@ class M7FineTuner(BaseFineTuner):
         learning_rate_max = training_learning_rate
         learning_rate_min = learning_rate_max / 100
 
-        #Preparamos Callbacks
-        callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
-        callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_accuracy', factor=0.2, patience=5, min_lr = learning_rate_min)
-
+        # Preparamos Callbacks
+        def build_callbacks_fn(hp):
+            callback_early = tf.keras.callbacks.EarlyStopping(
+                monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
+            callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+                monitor='val_accuracy', factor=0.2, patience=5, min_lr=learning_rate_min)
+            return [callback_early, callback_reduce_lr]
 
         return BaseFineTuner.base_fine_tuning(
             modelName=modelName,
@@ -53,7 +56,6 @@ class M7FineTuner(BaseFineTuner):
             y=y,
             hyperModel=None,
             tunerObjectives=keras_tuner.Objective("val_accuracy", direction="max"),
-            callbacks=[callback_early, callback_reduce_lr],
             tmp_dir=tmp_dir,
             batch_size=batch_size,
             overwrite=overwrite,
@@ -64,7 +66,8 @@ class M7FineTuner(BaseFineTuner):
             training_loss=training_loss,
             training_metrics=training_metrics,
             max_trials=max_trials,
-            random_seed=random_seed
+            random_seed=random_seed,
+            hyperparams_log_path=hyperparams_log_path,
+            build_callbacks_fn=build_callbacks_fn
         )
 
-    

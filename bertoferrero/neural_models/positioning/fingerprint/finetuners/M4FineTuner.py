@@ -12,29 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from bertoferrero.neural_models.positioning.fingerprint.models import M2
-from sklearn.model_selection import train_test_split
+from bertoferrero.neural_models.positioning.fingerprint.models import M4
 from .BaseFineTuner import BaseFineTuner
 import tensorflow as tf
-import autokeras as ak
-from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import descale_numpy
-import keras_tuner
 import pandas as pd
+import keras_tuner
+import numpy as np
 
-class M2FineTuner(BaseFineTuner):
+class M4FineTuner(BaseFineTuner):
     
     
     @staticmethod
     def fine_tuning(model_file: str, dataset_path: str, scaler_file: str, tmp_dir: str, batch_size: int, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
             
-        modelName = 'M2'
+        modelName = 'M4'
         training_loss = 'mse'
         training_optimizer = 'adam'
         training_metrics = ['mse', 'accuracy']
-        training_learning_rate=0.0001
+        training_learning_rate=0.001
         
         #Preparamos datos de entrenamiento
-        X, y = M2.load_testing_data(dataset_path, scaler_file)
+        X, y, Xmap = M4.load_traning_data(dataset_path, scaler_file)
 
         #Definimos el rango de la tasa de aprendizaje inicial
         learning_rate_max = training_learning_rate
@@ -64,7 +62,7 @@ class M2FineTuner(BaseFineTuner):
 
         return BaseFineTuner.base_fine_tuning(
             modelName=modelName,
-            X=X,
+            X=[X, Xmap],
             y=y,
             hyperModel=None,
             tunerObjectives=keras_tuner.Objective("val_loss", direction="min"),
