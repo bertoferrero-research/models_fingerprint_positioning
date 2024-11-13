@@ -18,6 +18,8 @@ import tensorflow as tf
 import pandas as pd
 import keras_tuner
 import numpy as np
+import autokeras as ak
+from itertools import chain
 
 class M4FineTuner(BaseFineTuner):
     
@@ -27,7 +29,6 @@ class M4FineTuner(BaseFineTuner):
             
         modelName = 'M4'
         training_loss = 'mse'
-        training_optimizer = 'adam'
         training_metrics = ['mse', 'accuracy']
         training_learning_rate=0.001
         
@@ -38,33 +39,70 @@ class M4FineTuner(BaseFineTuner):
         learning_rate_max = training_learning_rate
         learning_rate_min = learning_rate_max / 100
 
-        
-        # Preparamos Callbacks
-        def build_callbacks_fn(hp):
-            # hp_patience_early = hp.Int('patience_early', min_value=5, max_value=20, step=1)
-            # hp_patience_reduce_lr = hp.Int('patience_reduce_lr', min_value=3, max_value=10, step=1)
-            # hp_factor_reduce_lr = hp.Float('factor_reduce_lr', min_value=0.1, max_value=0.5, step=0.1)
-            # hp_min_delta_early = hp.Float('min_delta_early', min_value=0.00001, max_value=0.001, step=0.00001)
-
-            # callback_early = tf.keras.callbacks.EarlyStopping(
-            #     monitor='val_loss', min_delta=hp_min_delta_early, patience=hp_patience_early, restore_best_weights=True)
-            # callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-            #     monitor='val_loss', factor=hp_factor_reduce_lr, patience=hp_patience_reduce_lr, min_lr=learning_rate_min)
-
-            callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-            callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr = learning_rate_min)
-            return [callback_early, callback_reduce_lr]
-
         #Preparamos Callbacks
-        # callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-        # callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr = learning_rate_min)
+        callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
+        callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr = learning_rate_min)
+        callbacks = [callback_early, callback_reduce_lr]
 
+        # Cargamos el modelo
+        base_model = tf.keras.models.load_model(
+            model_file, custom_objects=ak.CUSTOM_OBJECTS)
+        
+        # Definimos los grupos de capas para la desactivación
+        m4_layers_data_input = [
+            ['input_1'],                            #Entrada
+            ['dense', 're_lu'],                     #Capa 64
+            ['dense_2', 're_lu_2', 'dropout'],      #Capa 512
+            ['dense_4', 're_lu_4', 'dropout_1']     #Capa 32
+        ]
+        m4_layers_mask_input = [
+            ['input_2'],                            #Entrada
+            ['dense_1', 're_lu_1'],                 #Capa 16
+            ['dense_3', 're_lu_3'],                 #Capa 512
+            ['dense_5', 're_lu_5']                  #Capa 512
+        ]
+
+        #Preparamos el hypermodelo personalizado
+        def M4HyperModel(hp):
+            # Clonamos el modelo base para que en cada iteración se empiece desde el mismo punto
+            model = tf.keras.models.clone_model(base_model)
+
+            # Cargamos los pesos del modelo base
+            model.set_weights(base_model.get_weights())
+
+            # Definimos el conjunto de capas a congelar por cada grupo
+            layers_to_freeze_data_input = hp.Int(
+                'layers_to_freeze_data_input', min_value=0, max_value=len(m4_layers_data_input))
+            layers_to_freeze_mask_input = hp.Int(
+                'layers_to_freeze_mask_input', min_value=0, max_value=len(m4_layers_mask_input))
+
+            # Congelamos las capas que tocan
+            layers_name_to_freeze = list(chain(*(m4_layers_data_input[:layers_to_freeze_data_input]), *(m4_layers_mask_input[:layers_to_freeze_mask_input])))
+            layers_to_freeze = [layer for layer in model.layers if layer.name in layers_name_to_freeze]
+            for layer in layers_to_freeze:
+                layer.trainable = False
+
+            # Definimos la tasa de aprendizaje
+            learning_rate = hp.Float('learning_rate', min_value=learning_rate_min,
+                                        max_value=learning_rate_max, step=10, sampling="log")
+
+            optimizer = tf.keras.optimizers.Adam(
+                learning_rate=learning_rate)
+
+            # Compilamos el modelo
+            model.compile(
+                loss=training_loss,
+                optimizer=optimizer,
+                metrics=training_metrics
+            )
+
+            return model
 
         return BaseFineTuner.base_fine_tuning(
             modelName=modelName,
             X=[X, Xmap],
             y=y,
-            hyperModel=None,
+            hyperModel=M4HyperModel,
             tunerObjectives=keras_tuner.Objective("val_loss", direction="min"),
             tmp_dir=tmp_dir,
             batch_size=batch_size,
@@ -72,13 +110,12 @@ class M4FineTuner(BaseFineTuner):
             model_file=model_file,
             learning_rate_max=learning_rate_max,
             learning_rate_min=learning_rate_min,
-            training_optimizer=training_optimizer,
             training_loss=training_loss,
             training_metrics=training_metrics,
             max_trials=max_trials,
             random_seed=random_seed,
             hyperparams_log_path=hyperparams_log_path,
-            build_callbacks_fn=build_callbacks_fn
+            callbacks=callbacks
         )
 
     
