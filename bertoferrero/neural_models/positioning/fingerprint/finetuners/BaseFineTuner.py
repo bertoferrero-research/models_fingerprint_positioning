@@ -29,6 +29,20 @@ class BaseFineTuner(ABC):
     def fine_tuning(model_file: str, dataset_path: str, scaler_file: str, tmp_dir: str, batch_size: int, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
         pass   
 
+    @abstractmethod
+    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42, history_plot_path: str = None):
+        pass
+
+    @abstractmethod
+    def get_layers_definition():
+        """
+        Returns the definition of the layers to be used for freezing.
+        This method should be implemented by subclasses to provide the specific layer definitions.
+        Returns:
+            list: A list of lists, where each inner list contains the names of layers in a group.
+        """
+        pass
+
     @staticmethod
     def automl_trials_logger(tuner, log_file: str, num_trials: int = 10):
         """
@@ -54,6 +68,18 @@ class BaseFineTuner(ABC):
             for trial in trials:
                 writer.writerow(
                     list(trial.hyperparameters.values.values()) + [trial.score])
+
+    @staticmethod
+    def freeze_layers(model, layers_name_to_freeze):
+        """
+        Freezes the specified layers in the model.
+        Args:
+            model: The model whose layers are to be frozen.
+            layers_name_to_freeze (list): A list of layer names to freeze.
+        """
+        layers_to_freeze = [layer for layer in model.layers if layer.name in layers_name_to_freeze]
+        for layer in layers_to_freeze:
+            layer.trainable = False
 
     @staticmethod
     def base_fine_tuning(modelName: str, X: any, y: any, hyperModel: Union[str, None], tunerObjectives: any, callbacks: list, tmp_dir: str, batch_size: int, overwrite: bool, model_file: Union[str, None] = None, learning_rate_max: Union[float, None] = None, learning_rate_min: Union[float, None] = None, training_optimizer: Union[str, None] = None, training_loss: Union[str, None] = None, training_metrics: Union[list, None] = None, test_size: float = 0.2, max_trials: int = 100, random_seed: int = 42, hyperparams_log_path: str = None, build_callbacks_fn=None):

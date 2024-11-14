@@ -17,14 +17,40 @@ from sklearn.model_selection import train_test_split
 from .BaseFineTuner import BaseFineTuner
 import tensorflow as tf
 import autokeras as ak
-from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import descale_numpy
+from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import set_random_seed_value
 import keras_tuner
 import pandas as pd
 from itertools import chain
+from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import plot_learning_curves
 
 class M2FineTuner(BaseFineTuner):
     
-    
+    @staticmethod
+    def load_data_and_model(dataset_path, scaler_file, model_file):
+        X, y = M2.load_testing_data(dataset_path, scaler_file)
+        model = tf.keras.models.load_model(model_file, custom_objects=ak.CUSTOM_OBJECTS)
+        return X, y, model
+
+    @staticmethod
+    def prepare_callbacks(learning_rate_min):
+        callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
+        callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=learning_rate_min)
+        return [callback_early, callback_reduce_lr]
+
+    @staticmethod
+    def freeze_layers(model, m2_layers, groups_layers_to_freeze):
+        layers_name_to_freeze = list(chain(*(m2_layers[:groups_layers_to_freeze])))
+        BaseFineTuner.freeze_layers(model, layers_name_to_freeze)
+
+    @staticmethod
+    def get_layers_definition():
+        return [
+            ['input_1'],                            # Entrada
+            ['dense', 're_lu', 'dropout'],          # Capa 1024
+            ['dense_1', 're_lu_1'],                 # Capa 128
+            ['dense_2', 're_lu_2', 'dropout_1'],    # Capa 16
+        ]
+
     @staticmethod
     def fine_tuning(model_file: str, dataset_path: str, scaler_file: str, tmp_dir: str, batch_size: int, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
             
@@ -35,7 +61,7 @@ class M2FineTuner(BaseFineTuner):
         training_learning_rate=0.0001
         
         #Preparamos datos de entrenamiento
-        X, y = M2.load_testing_data(dataset_path, scaler_file)
+        X, y, base_model = M2FineTuner.load_data_and_model(dataset_path, scaler_file, model_file)
 
         #Definimos el rango de la tasa de aprendizaje inicial
         learning_rate_max = training_learning_rate
@@ -43,21 +69,10 @@ class M2FineTuner(BaseFineTuner):
 
         
         # Preparamos Callbacks
-        callback_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-        callback_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr = learning_rate_min)
-        callbacks = [callback_early, callback_reduce_lr]
+        callbacks = M2FineTuner.prepare_callbacks(learning_rate_min)
 
-        # Cargamos el modelo
-        base_model = tf.keras.models.load_model(
-            model_file, custom_objects=ak.CUSTOM_OBJECTS)
-        
         # Definimos los grupos de capas para la desactivación
-        m2_layers = [
-            ['input_1'],                            #Entrada
-            ['dense', 're_lu', 'dropout'],          #Capa 1024
-            ['dense_1', 're_lu_1'],                 #Capa 128
-            ['dense_2', 're_lu_2', 'dropout_1'],    #Capa 16
-        ]
+        m2_layers = M2FineTuner.get_layers_definition()
 
         #Preparamos el hypermodelo personalizado
         def M2HyperModel(hp):
@@ -72,10 +87,7 @@ class M2FineTuner(BaseFineTuner):
                 'groups_layers_to_freeze', min_value=0, max_value=len(m2_layers))
 
             # Congelamos las capas que tocan
-            layers_name_to_freeze = list(chain(*(m2_layers[:groups_layers_to_freeze])))
-            layers_to_freeze = [layer for layer in model.layers if layer.name in layers_name_to_freeze]
-            for layer in layers_to_freeze:
-                layer.trainable = False
+            M2FineTuner.freeze_layers(model, m2_layers, groups_layers_to_freeze)
 
             # Definimos la tasa de aprendizaje
             learning_rate = hp.Float('learning_rate', min_value=learning_rate_min,
@@ -113,4 +125,40 @@ class M2FineTuner(BaseFineTuner):
             callbacks=callbacks
         )
 
-    
+    @staticmethod
+    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42):
+        training_loss = 'mse'
+        training_metrics = ['mse', 'accuracy']
+        training_learning_rate = 0.0001
+        groups_layers_to_freeze = 0
+
+        set_random_seed_value(seed=random_seed)
+
+        # Preparamos datos de entrenamiento
+        X, y, model = M2FineTuner.load_data_and_model(dataset_path, scaler_file, model_file)
+
+        # Definimos los grupos de capas para la desactivación
+        m2_layers = M2FineTuner.get_layers_definition()
+        
+        # Congelamos las capas que tocan
+        M2FineTuner.freeze_layers(model, m2_layers, groups_layers_to_freeze)
+
+        # Compilamos el modelo
+        model.compile(
+            loss=training_loss,
+            optimizer=tf.keras.optimizers.Adam(learning_rate=training_learning_rate),
+            metrics=training_metrics
+        )
+
+        # Preparamos callbacks
+        callbacks = M2FineTuner.prepare_callbacks(training_learning_rate)
+
+        # Entrenamos el modelo
+        history = model.fit(X, y, epochs=1000, batch_size=batch_size, validation_split=0.2, callbacks=callbacks, verbose=2)
+
+
+        # Evaluamos el modelo
+        score = model.evaluate(X, y, verbose=0)
+
+        return model, score, history
+
