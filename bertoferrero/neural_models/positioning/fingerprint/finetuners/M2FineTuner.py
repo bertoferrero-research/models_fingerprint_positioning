@@ -137,6 +137,9 @@ class M2FineTuner(BaseFineTuner):
         # Preparamos datos de entrenamiento
         X, y, model = M2FineTuner.load_data_and_model(dataset_path, scaler_file, model_file)
 
+        X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=0.2, random_state=random_seed)
+
         # Definimos los grupos de capas para la desactivación
         m2_layers = M2FineTuner.get_layers_definition()
         
@@ -151,14 +154,13 @@ class M2FineTuner(BaseFineTuner):
         )
 
         # Preparamos callbacks
-        callbacks = M2FineTuner.prepare_callbacks(training_learning_rate)
+        callbacks = M2FineTuner.prepare_callbacks(training_learning_rate/100)
 
         # Entrenamos el modelo
-        history = model.fit(X, y, epochs=1000, batch_size=batch_size, validation_split=0.2, callbacks=callbacks, verbose=2)
-
+        history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=1000, batch_size=batch_size, callbacks=callbacks, verbose=2)
 
         # Evaluamos el modelo
-        score = model.evaluate(X, y, verbose=0)
+        score = model.evaluate(X_val, y_val, verbose=0)
 
         return model, score, history
 

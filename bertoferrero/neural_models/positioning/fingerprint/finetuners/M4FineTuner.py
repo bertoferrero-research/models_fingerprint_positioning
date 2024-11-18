@@ -22,6 +22,7 @@ import keras_tuner
 import numpy as np
 import autokeras as ak
 from itertools import chain
+from sklearn.model_selection import train_test_split
 
 class M4FineTuner(BaseFineTuner):
     
@@ -142,6 +143,10 @@ class M4FineTuner(BaseFineTuner):
 
         # Preparamos datos de entrenamiento
         X, y, model = M4FineTuner.load_data_and_model(dataset_path, scaler_file, model_file)
+        splited_data = train_test_split(*X, y, test_size=0.2, random_state=random_seed)            
+        y_train, y_val = splited_data[-2], splited_data[-1]
+        X_train = splited_data[:-2][0::2]
+        X_val = splited_data[:-2][1::2]
 
         # Definimos los grupos de capas para la desactivación
         m4_layers_data_input, m4_layers_mask_input = M4FineTuner.get_layers_definition()
@@ -157,14 +162,14 @@ class M4FineTuner(BaseFineTuner):
         )
 
         # Preparamos callbacks
-        callbacks = M4FineTuner.prepare_callbacks(training_learning_rate)
+        callbacks = M4FineTuner.prepare_callbacks(training_learning_rate/100)
 
         # Entrenamos el modelo
-        history = model.fit(X, y, epochs=1000, batch_size=batch_size, validation_split=0.2, callbacks=callbacks, verbose=2)
+        history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=1000, batch_size=batch_size, callbacks=callbacks, verbose=2)
 
 
         # Evaluamos el modelo
-        score = model.evaluate(X, y, verbose=0)
+        score = model.evaluate(X_val, y_val, verbose=0)
 
         return model, score, history
 
