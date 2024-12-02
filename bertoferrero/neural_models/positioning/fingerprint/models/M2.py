@@ -29,7 +29,7 @@ class M2(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True)
 
-    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None):
+    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):
         tf.random.set_seed(random_seed)
         np.random.seed(random_seed)
         random.seed(random_seed)
@@ -45,8 +45,9 @@ class M2(ModelsBaseClass):
         layer = tf.keras.layers.ReLU(name='re_lu')(layer)
         
         # Dropout
-        dropout_rate_1 = 0.25 if not empty_values else 0.5
-        layer = tf.keras.layers.Dropout(dropout_rate_1, name='dropout')(layer)
+        if not disable_dropouts:
+            dropout_rate_1 = 0.25 if not empty_values else 0.5
+            layer = tf.keras.layers.Dropout(dropout_rate_1, name='dropout')(layer)
 
         # Segunda capa densa
         layer = tf.keras.layers.Dense(128, activation='linear', name='dense_1')(layer)
@@ -57,8 +58,9 @@ class M2(ModelsBaseClass):
         layer = tf.keras.layers.ReLU(name='re_lu_2')(layer)
         
         # Dropout adicional
-        if empty_values:
-            layer = tf.keras.layers.Dropout(0.25, name='dropout_1')(layer)
+        if not disable_dropouts:
+            if empty_values:
+                layer = tf.keras.layers.Dropout(0.25, name='dropout_1')(layer)
         
         output_layer = tf.keras.layers.Dense(self.outputlength, activation='linear', name='regression_head_1')(layer)
 

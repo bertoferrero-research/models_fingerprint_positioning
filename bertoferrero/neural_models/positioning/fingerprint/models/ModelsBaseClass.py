@@ -28,7 +28,7 @@ class ModelsBaseClass:
     def load_testing_data(data_file: str, scaler_file: str):
         raise NotImplementedError
         
-    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None):
+    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):
         raise NotImplementedError
 
     def build_model_autokeras(self, designing:bool, overwrite:bool, tuner:str , random_seed:int, autokeras_project_name:str, auokeras_folder:str, max_trials:int = 100):

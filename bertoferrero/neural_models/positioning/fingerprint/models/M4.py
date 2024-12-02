@@ -30,7 +30,7 @@ class M4(ModelsBaseClass):
     def load_testing_data(data_file: str, scaler_file: str):
         return load_data(data_file, scaler_file, include_pos_z=False, scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True)
 
-    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None):
+    def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):
         tf.random.set_seed(random_seed)
         np.random.seed(random_seed)
         random.seed(random_seed)
@@ -52,19 +52,21 @@ class M4(ModelsBaseClass):
 
         dense_2 = tf.keras.layers.Dense(512, activation='linear', name='dense_2')(re_lu)
         re_lu_2 = tf.keras.layers.ReLU(name='re_lu_2')(dense_2)
-        dropout = tf.keras.layers.Dropout(0.25, name='dropout')(re_lu_2)
+        if not disable_dropouts:
+            re_lu_2 = tf.keras.layers.Dropout(0.25, name='dropout')(re_lu_2)
 
         dense_3 = tf.keras.layers.Dense(512, activation='linear', name='dense_3')(re_lu_1)
         re_lu_3 = tf.keras.layers.ReLU(name='re_lu_3')(dense_3)
 
-        dense_4 = tf.keras.layers.Dense(32, activation='linear', name='dense_4')(dropout)
+        dense_4 = tf.keras.layers.Dense(32, activation='linear', name='dense_4')(re_lu_2)
         re_lu_4 = tf.keras.layers.ReLU(name='re_lu_4')(dense_4)
-        dropout_1 = tf.keras.layers.Dropout(0.25, name='dropout_1')(re_lu_4)
+        if not disable_dropouts:
+            re_lu_4 = tf.keras.layers.Dropout(0.25, name='dropout_1')(re_lu_4)
 
         dense_5 = tf.keras.layers.Dense(512, activation='linear', name='dense_5')(re_lu_3)
         re_lu_5 = tf.keras.layers.ReLU(name='re_lu_5')(dense_5)
 
-        concatenate = tf.keras.layers.Concatenate(name='concatenate')([dropout_1, re_lu_5])
+        concatenate = tf.keras.layers.Concatenate(name='concatenate')([re_lu_4, re_lu_5])
 
         dense_6 = tf.keras.layers.Dense(16, activation='linear', name='dense_6')(concatenate)
         re_lu_6 = tf.keras.layers.ReLU(name='re_lu_6')(dense_6)

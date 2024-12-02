@@ -30,7 +30,7 @@ class BaseFineTuner(ABC):
         pass   
 
     @abstractmethod
-    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42, history_plot_path: str = None):
+    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42, disable_dropouts: bool = False):
         pass
 
     @abstractmethod
@@ -80,6 +80,21 @@ class BaseFineTuner(ABC):
         layers_to_freeze = [layer for layer in model.layers if layer.name in layers_name_to_freeze]
         for layer in layers_to_freeze:
             layer.trainable = False
+
+    @staticmethod
+    def disable_dropouts(model):
+        """
+        Disables all dropout layers in a given Keras model by setting their dropout rate to 0.0.
+
+        Args:
+            model (tf.keras.Model): The Keras model in which to disable dropout layers.
+
+        Returns:
+            None
+        """
+        for layer in model.layers:
+            if isinstance(layer, tf.keras.layers.Dropout) and hasattr(layer, 'rate'):
+                layer.rate = 0.0
 
     @staticmethod
     def base_fine_tuning(modelName: str, X: any, y: any, hyperModel: Union[str, None], tunerObjectives: any, callbacks: list, tmp_dir: str, batch_size: int, overwrite: bool, model_file: Union[str, None] = None, learning_rate_max: Union[float, None] = None, learning_rate_min: Union[float, None] = None, training_optimizer: Union[str, None] = None, training_loss: Union[str, None] = None, training_metrics: Union[list, None] = None, test_size: float = 0.2, max_trials: int = 100, random_seed: int = 42, hyperparams_log_path: str = None, build_callbacks_fn=None):

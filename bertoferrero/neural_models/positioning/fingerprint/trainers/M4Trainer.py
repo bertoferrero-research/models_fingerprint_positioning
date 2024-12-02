@@ -66,7 +66,7 @@ class M4Trainer(BaseTrainer):
         return model, score
     
     staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None):
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False):
 
         #Cargamos los datos de entrenamiento
         X, y, Xmap = M4.load_traning_data(dataset_path, scaler_file)
@@ -80,7 +80,7 @@ class M4Trainer(BaseTrainer):
         modelInstance = M4(X.shape[1], y.shape[1])
 
         #Construimos el modelo
-        model = modelInstance.build_model(empty_values=empty_values, random_seed=random_seed, base_model_path=base_model_path)
+        model = modelInstance.build_model(empty_values=empty_values, random_seed=random_seed, base_model_path=base_model_path, disable_dropouts=disable_dropouts)
 
         # Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)

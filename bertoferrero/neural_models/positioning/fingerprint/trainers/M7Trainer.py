@@ -65,7 +65,7 @@ class M7Trainer(BaseTrainer):
         return model, score
     
     @staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None):
+    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False):
 
         cell_amount_x = 7
         cell_amount_y = 6

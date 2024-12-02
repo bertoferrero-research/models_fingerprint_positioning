@@ -132,7 +132,7 @@ class M4FineTuner(BaseFineTuner):
         )
 
     @staticmethod
-    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42):
+    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42, disable_dropouts: bool = False):
         training_loss = 'mse'
         training_metrics = ['mse', 'accuracy']
         training_learning_rate = 0.001
@@ -153,6 +153,10 @@ class M4FineTuner(BaseFineTuner):
         
         # Congelamos las capas que tocan
         M4FineTuner.freeze_layers(model, m4_layers_data_input, m4_layers_mask_input, layers_to_freeze_data_input, layers_to_freeze_mask_input)
+
+        # Desactivamos dropouts si hace falta
+        if disable_dropouts:
+            BaseFineTuner.disable_dropouts(model)
 
         # Compilamos el modelo
         model.compile(

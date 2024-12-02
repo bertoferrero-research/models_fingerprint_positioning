@@ -126,7 +126,7 @@ class M2FineTuner(BaseFineTuner):
         )
 
     @staticmethod
-    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42):
+    def fine_tuning_noautoml(model_file: str, dataset_path: str, scaler_file: str, batch_size: int, random_seed: int = 42, disable_dropouts: bool = False):
         training_loss = 'mse'
         training_metrics = ['mse', 'accuracy']
         training_learning_rate = 0.0001
@@ -145,6 +145,11 @@ class M2FineTuner(BaseFineTuner):
         
         # Congelamos las capas que tocan
         M2FineTuner.freeze_layers(model, m2_layers, groups_layers_to_freeze)
+
+        # Desactivamos dropouts si hace falta
+        if disable_dropouts:
+            BaseFineTuner.disable_dropouts(model)
+
 
         # Compilamos el modelo
         model.compile(
