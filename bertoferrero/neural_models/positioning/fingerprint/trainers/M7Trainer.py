@@ -84,9 +84,7 @@ class M7Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
-        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)
-
-        return model, score
+        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)      
     
     
 

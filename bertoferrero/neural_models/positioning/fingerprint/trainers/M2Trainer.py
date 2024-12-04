@@ -68,9 +68,9 @@ class M2Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-        model, score = BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)
+        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)
 
-        return model, score
+        
     
     @staticmethod
     def prediction(dataset_path: str, model_file: str, scaler_file: str):

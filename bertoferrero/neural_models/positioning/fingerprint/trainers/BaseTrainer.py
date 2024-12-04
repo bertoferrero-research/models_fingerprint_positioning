@@ -67,12 +67,12 @@ class BaseTrainer(ABC):
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=test_size, random_state=random_seed)
         # Entrenamos
-        model.fit(X_train, y_train, validation_data=(X_val, y_val),
+        history = model.fit(X_train, y_train, validation_data=(X_val, y_val),
                   verbose=(1 if designing else 2), callbacks=callbacks, batch_size=batch_size, epochs=1000)
 
         # Evaluamos
         score = model.evaluate(X_val, y_val, verbose=0)
-        return model, score
+        return model, score, history
 
     @staticmethod
     def get_model_instance(model_file: str):

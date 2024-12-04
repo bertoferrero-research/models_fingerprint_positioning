@@ -87,11 +87,11 @@ class M4Trainer(BaseTrainer):
         X_train, X_val, y_train, y_val, Xmap_train, Xmap_val = train_test_split(
             X, y, Xmap, test_size=0.2, random_state=random_seed)
         
-        model.fit([X_train, Xmap_train], y_train, validation_data=([X_val, Xmap_val], y_val),
+        history = model.fit([X_train, Xmap_train], y_train, validation_data=([X_val, Xmap_val], y_val),
                   verbose=2, callbacks=[callback], batch_size=batch_size, epochs=1000)
         score = model.evaluate([X_val, Xmap_val], y_val, verbose=0)
 
-        return model, score
+        return model, score, history
 
     @staticmethod
     def prediction(dataset_path: str, model_file: str, scaler_file: str):
