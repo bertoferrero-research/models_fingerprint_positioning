@@ -3,16 +3,7 @@
 
 This library contains a collection of eight neural network models (M1-M8) and their corresponding training classes (M1Trainer - M8Trainer) used for positioning fingerprinting. These models have been designed to be compatible with AutoML libraries. This code serves as a demonstration of the models utilized in our research paper, which is currently under review.
 
-This code is employed in our research projects. Please, cite one or both the following works for any use of the code or for a reference to the pusblished work:
-
-```bibtex
-@inproceedings{ferrero_indoor_positioning_simulator,
-  author = {Ferrero-Lopez, Alberto and Gallego, Antonio Javier and Lozano, Miguel Angel},
-  title = {Proceedings of the 2025 International conference on Advanced Machine Learning and Data Science (AMLDS 2025), Tokyo, Japan, July 19-21},
-  year = {2025},
-  booktitle = {Proceedings of the Indoor Positioning Conference}
-}
-```
+This code is employed in our research projects. Please, cite one or both the following works for any use of the library or for a reference to the pusblished work:
 
 ```bibtex
 @article{ferrero_ble_neural_network_positioning,
@@ -20,6 +11,15 @@ This code is employed in our research projects. Please, cite one or both the fol
   title = {Bluetooth Low Energy Indoor Positioning: A Fingerprinting Neural Network Approach},
   journal = {Internet Of Things},
   year = {2025}
+}
+```
+
+```bibtex
+@inproceedings{ferrero_indoor_positioning_simulator,
+  author = {Ferrero-Lopez, Alberto and Gallego, Antonio Javier and Lozano, Miguel Angel},
+  title = {Proceedings of the 2025 International conference on Advanced Machine Learning and Data Science (AMLDS 2025), Tokyo, Japan, July 19-21},
+  year = {2025},
+  booktitle = {Proceedings of the Indoor Positioning Conference}
 }
 ```
 
