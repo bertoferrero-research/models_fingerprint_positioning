@@ -19,7 +19,7 @@ setup(
     version='0.4.0',
     packages=find_packages(),
     install_requires=[
-        'tensorflow<=2.15.0',
+        'tensorflow==2.15.0',
         'scikit-learn',
         'autokeras==1.1.0',
         'keras-tuner'
