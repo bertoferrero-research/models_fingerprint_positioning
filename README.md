@@ -17,7 +17,7 @@ This code is employed in our research projects. Please, cite one or both the fol
 ```
 
 ```bibtex
-@inproceedings{ferrero_ble_neural,
+@inproceedings{FerreroLopez2025simulator,
   author={Ferrero-López, Alberto and Lozano, Miguel Angel and Gallego, Antonio Javier},
   booktitle={2025 International Conference on Advanced Machine Learning and Data Science (AMLDS)}, 
   title={Synthetic Data for Indoor Positioning Systems: Reducing Offline Collection Costs}, 
@@ -26,7 +26,8 @@ This code is employed in our research projects. Please, cite one or both the fol
   number={},
   pages={236-241},
   keywords={Training;Costs;Accuracy;Fingerprint recognition;Data collection;Noise measurement;Received signal strength indicator;IP networks;Indoor positioning systems;Synthetic data;Indoor Positioning;Fingerprint;Synthetic Data Generation},
-  doi={10.1109/AMLDS63918.2025.11159389}}
+  doi={10.1109/AMLDS63918.2025.11159389}
+}
 ```
 
 ## Usage
