@@ -30,12 +30,43 @@ from typing import Union
 # region Carga de datos
 
 
-def load_data(data_file: str, scaler_file: str = None, train_scaler_file: bool = False, include_pos_z: bool = True, scale_y: bool = False, remove_not_full_rows: bool = False, not_valid_sensor_value: int = None, return_valid_sensors_map: bool = False):
+def load_data(data_file: str, scaler_file: str = None, train_scaler_file: bool = False, include_pos_z: bool = True, scale_y: bool = False, remove_not_full_rows: bool = False, not_valid_sensor_value: int = None, return_valid_sensors_map: bool = False, pos_limits: dict = None):
+    '''
+    Carga un dataset CSV y prepara sus datos de entrada/salida para entrenamiento o evaluación.
+
+    Flujo principal:
+    1. Lee el CSV indicado en `data_file`.
+    2. Separa en `X` (RSSI) e `y` (posición) mediante `prepare_data`.
+    3. Opcionalmente genera un mapa de sensores válidos/inválidos (`Xmap`).
+    4. Opcionalmente escala `X` (RSSI) usando un `StandardScaler` persistido en fichero.
+    5. Convierte la salida a `float32` y devuelve los resultados.
+
+    Args:
+        data_file (str): Ruta al fichero CSV de datos.
+        scaler_file (str, optional): Ruta del scaler para RSSI. Si es `None`, no se escala `X`.
+        train_scaler_file (bool, optional): Si es `True`, entrena y guarda el scaler de RSSI.
+            Si es `False`, carga y aplica el scaler existente.
+        include_pos_z (bool, optional): Si es `True`, incluye `pos_z` en `y`.
+        scale_y (bool, optional): Si es `True`, escala las posiciones (`pos_x`, `pos_y`).
+        remove_not_full_rows (bool, optional): Si es `True`, reemplaza `-200` por `NaN`
+            en columnas RSSI durante la preparación de datos.
+        not_valid_sensor_value (int, optional): Valor que identifica lecturas de sensor no válidas.
+        return_valid_sensors_map (bool, optional): Si es `True` y `not_valid_sensor_value` no es `None`,
+            devuelve también `Xmap` (1: válido, 0: no válido).
+        pos_limits (dict, optional): Límites para el escalado/desescalado de posiciones.
+            Claves esperadas: `min_x`, `max_x`, `min_y`, `max_y`. Si faltan claves,
+            se usan los valores por defecto de `get_scaler_pos_x` y `get_scaler_pos_y`.
+
+    Returns:
+        tuple:
+            - (X, y) si no se solicita mapa de sensores.
+            - (X, y, Xmap) si se solicita mapa y se proporciona `not_valid_sensor_value`.
+    '''
     # Cargamos los ficheros
     data = pd.read_csv(data_file)
 
     # Preparamos los datos
-    X, y = prepare_data(data, include_pos_z, scale_y, remove_not_full_rows)
+    X, y = prepare_data(data, include_pos_z, scale_y, remove_not_full_rows, pos_limits)
 
     # Preparamos el mapa de sensores no válidos
     Xmap = None
@@ -107,7 +138,7 @@ def load_data_inverse(data_file: str, scaler_file: str, train_scaler_file: bool 
     return X, y, sensors
 
 
-def prepare_data(data, include_pos_z: bool = True, scale_y: bool = False, remove_not_full_rows: bool = False):
+def prepare_data(data, include_pos_z: bool = True, scale_y: bool = False, remove_not_full_rows: bool = False, pos_limits: dict = None):
     # Eliminamos las filas que no tienen todos los datos
 
     if remove_not_full_rows:
@@ -119,7 +150,7 @@ def prepare_data(data, include_pos_z: bool = True, scale_y: bool = False, remove
     X = data.iloc[:, 4:]
     # Escalamos y
     if scale_y:
-        y = scale_dataframe(y)
+        y = scale_dataframe(y, pos_limits)
 
     # Ordenamos alfabéticamente las columnas de X, asegurandonos de que todos los datasets van en el mismo orden
     X = X.reindex(sorted(X.columns), axis=1)
@@ -209,168 +240,230 @@ def scale_RSSI_track(scaler_file: str, X):
     return X
 
 
-def get_scaler_pos_x():
+def get_scaler_pos_x(mn: float = 0, mx: float = 20.660138018121128):
     """
     Devuelve un scaler para la posición x
+    Los valores por defecto son los del paper de Danis
     Returns: 
         MinMaxScaler    
     """
-    scaler = MinMaxScaler()
-    scaler.fit([[0], [20.660138018121128]])
-    return scaler
+    return get_scaler_pos(mn, mx)
 
 
-def get_scaler_pos_y():
+def get_scaler_pos_y(mn: float = 0, mx: float = 17.64103475472807):
     """
     Devuelve un scaler para la posición y
+    Los valores por defecto son los del paper de Danis
     Returns: 
         MinMaxScaler    
     """
+    return get_scaler_pos(mn, mx)
+
+def get_scaler_pos(mn: float, mx: float):
     scaler = MinMaxScaler()
-    scaler.fit([[0], [17.64103475472807]])
+    scaler.fit([[mn], [mx]])
     return scaler
 
 
-def scale_pos_x(pos_x: pd.Series):
+def scale_pos_x(pos_x: pd.Series, pos_limits: dict = None):
     """
     Escala la posición x
     Args:
         pos_x (pd.Series): posición x
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.Series: posición x escalada
     """
-    scaler = get_scaler_pos_x()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_x' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_x']
+        if 'max_x' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_x']
+    scaler = get_scaler_pos_x(**scaler_kwargs)
     return scaler.transform(pos_x.values.reshape(-1, 1)).flatten()
 
 
-def scale_pos_x_single(pos_x: float):
+def scale_pos_x_single(pos_x: float, pos_limits: dict = None):
     """
     Escala la posición x
     Args:
         pos_x (float): posición x
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         float: posición x escalada
     """
-    scaler = get_scaler_pos_x()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_x' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_x']
+        if 'max_x' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_x']
+    scaler = get_scaler_pos_x(**scaler_kwargs)
     return scaler.transform([[pos_x]])[0][0]
 
 
-def scale_pos_y(pos_y: pd.Series):
+def scale_pos_y(pos_y: pd.Series, pos_limits: dict = None):
     """
     Escala la posición y
     Args:
         pos_y (pd.Series): posición y
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.Series: posición y escalada
     """
-    scaler = get_scaler_pos_y()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_y' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_y']
+        if 'max_y' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_y']
+    scaler = get_scaler_pos_y(**scaler_kwargs)
     return scaler.transform(pos_y.values.reshape(-1, 1)).flatten()
 
 
-def scale_pos_y_single(pos_y: float):
+def scale_pos_y_single(pos_y: float, pos_limits: dict = None):
     """
     Escala la posición y
     Args:
         pos_y (float): posición y
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         float: posición y escalada
     """
-    scaler = get_scaler_pos_y()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_y' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_y']
+        if 'max_y' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_y']
+    scaler = get_scaler_pos_y(**scaler_kwargs)
     return scaler.transform([[pos_y]])[0][0]
 
 
-def scale_dataframe(data: pd.DataFrame):
+def scale_dataframe(data: pd.DataFrame, pos_limits: dict = None):
     """
     Escala un dataframe
     Args:
         data (pd.DataFrame): dataframe a escalar
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.DataFrame: dataframe escalado
     """
     data_scaled = data.copy()
-    data_scaled['pos_x'] = scale_pos_x(data['pos_x'])
-    data_scaled['pos_y'] = scale_pos_y(data['pos_y'])
+    data_scaled['pos_x'] = scale_pos_x(data['pos_x'], pos_limits)
+    data_scaled['pos_y'] = scale_pos_y(data['pos_y'], pos_limits)
     return data_scaled
 
 
-def descale_pos_x(pos_x: pd.Series):
+def descale_pos_x(pos_x: pd.Series, pos_limits: dict = None):
     """
     Desescala la posición x
     Args:
         pos_x (pd.Series): posición x
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.Series: posición x desescalada
     """
-    scaler = get_scaler_pos_x()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_x' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_x']
+        if 'max_x' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_x']
+    scaler = get_scaler_pos_x(**scaler_kwargs)
     return scaler.inverse_transform(pos_x.values.reshape(-1, 1)).flatten()
 
 
-def descale_pos_x_np(pos_x: np.ndarray):
+def descale_pos_x_np(pos_x: np.ndarray, pos_limits: dict = None):
     """
     Descales the given position values using the scaler for pos_x.
 
     Parameters:
     pos_x (np.ndarray): The position values to be descaled.
+    pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
 
     Returns:
     np.ndarray: The descaled position values.
     """
-    scaler = get_scaler_pos_x()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_x' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_x']
+        if 'max_x' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_x']
+    scaler = get_scaler_pos_x(**scaler_kwargs)
     return scaler.inverse_transform(pos_x.reshape(-1, 1)).flatten()
 
 
-def descale_pos_y(pos_y: pd.Series):
+def descale_pos_y(pos_y: pd.Series, pos_limits: dict = None):
     """
     Desescala la posición y
     Args:
         pos_y (pd.Series): posición y
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.Series: posición y desescalada
     """
-    scaler = get_scaler_pos_y()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_y' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_y']
+        if 'max_y' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_y']
+    scaler = get_scaler_pos_y(**scaler_kwargs)
     return scaler.inverse_transform(pos_y.values.reshape(-1, 1)).flatten()
 
 
-def descale_pos_y_np(pos_y: np.ndarray):
+def descale_pos_y_np(pos_y: np.ndarray, pos_limits: dict = None):
     """
     Descales the given position values using the scaler for pos_y.
 
     Parameters:
     pos_y (np.ndarray): The position values to be descaled.
+    pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
 
     Returns:
     np.ndarray: The descaled position values.
     """
-    scaler = get_scaler_pos_y()
+    scaler_kwargs = {}
+    if pos_limits:
+        if 'min_y' in pos_limits:
+            scaler_kwargs['mn'] = pos_limits['min_y']
+        if 'max_y' in pos_limits:
+            scaler_kwargs['mx'] = pos_limits['max_y']
+    scaler = get_scaler_pos_y(**scaler_kwargs)
     return scaler.inverse_transform(pos_y.reshape(-1, 1)).flatten()
 
 
-def descale_dataframe(data: pd.DataFrame):
+def descale_dataframe(data: pd.DataFrame, pos_limits: dict = None):
     """
     Desescala un dataframe
     Args:
         data (pd.DataFrame): dataframe a desescalar
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
     Returns:
         pd.DataFrame: dataframe desescalado
     """
     data_scaled = data.copy()
-    data_scaled['pos_x'] = descale_pos_x(data['pos_x'])
-    data_scaled['pos_y'] = descale_pos_y(data['pos_y'])
+    data_scaled['pos_x'] = descale_pos_x(data['pos_x'], pos_limits)
+    data_scaled['pos_y'] = descale_pos_y(data['pos_y'], pos_limits)
     return data_scaled
 
 
-def descale_numpy(data: np.ndarray):
+def descale_numpy(data: np.ndarray, pos_limits: dict = None):
     """
     Descales the input numpy array by applying descaling functions to the x and y coordinates.
 
     Args:
         data (np.ndarray): The input numpy array.
+        pos_limits (dict): límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
 
     Returns:
         np.ndarray: The descaled numpy array.
     """
-    data[:, 0] = descale_pos_x_np(data[:, 0])
-    data[:, 1] = descale_pos_y_np(data[:, 1])
+    data[:, 0] = descale_pos_x_np(data[:, 0], pos_limits)
+    data[:, 1] = descale_pos_y_np(data[:, 1], pos_limits)
     return data
 
 # endregion

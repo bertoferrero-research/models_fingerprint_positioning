@@ -21,11 +21,11 @@ class ModelsBaseClass:
         self.outputlength = outputlength
 
     @staticmethod
-    def load_traning_data(data_file: str, scaler_file: str):
+    def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
         raise NotImplementedError
 
     @staticmethod
-    def load_testing_data(data_file: str, scaler_file: str):
+    def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
         raise NotImplementedError
         
     def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):

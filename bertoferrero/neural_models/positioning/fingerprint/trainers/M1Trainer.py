@@ -22,13 +22,13 @@ import pandas as pd
 
 class M1Trainer(BaseTrainer):
     @staticmethod
-    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None):
+    def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None, pos_limits: dict = None):
                
         #Definimos el nombre del modelo
         modelName = 'M1'
 
         #Cargamos los datos de entrenamiento
-        X, y = M1.load_traning_data(dataset_path, scaler_file)
+        X, y = M1.load_traning_data(dataset_path, scaler_file, pos_limits)
 
         #Instanciamos la clase del modelo
         modelInstance = M1(X.shape[1], y.shape[1])
@@ -54,9 +54,9 @@ class M1Trainer(BaseTrainer):
         return model, score
 
     @staticmethod
-    def prediction(dataset_path: str, model_file: str, scaler_file: str):
+    def prediction(dataset_path: str, model_file: str, scaler_file: str, pos_limits: dict = None):
         #Cargamos los datos de entrenamiento
-        input_data, output_data = M1.load_testing_data(dataset_path, scaler_file)
+        input_data, output_data = M1.load_testing_data(dataset_path, scaler_file, pos_limits)
         output_data = output_data.to_numpy()
 
         #Cargamos el modelo
@@ -69,8 +69,8 @@ class M1Trainer(BaseTrainer):
         predictions = model.predict(input_data)
 
         #Los datos de predicción y salida vienen escalados, debemos desescalarlos
-        output_data = descale_numpy(output_data)
-        predictions = descale_numpy(predictions)
+        output_data = descale_numpy(output_data, pos_limits)
+        predictions = descale_numpy(predictions, pos_limits)
 
         #Formateamos las métricas
         formated_metrics = {

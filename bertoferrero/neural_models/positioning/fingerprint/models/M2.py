@@ -22,12 +22,12 @@ import random
 
 class M2(ModelsBaseClass): 
     @staticmethod
-    def load_traning_data(data_file: str, scaler_file: str):
-        return load_data(data_file, scaler_file, train_scaler_file=True, include_pos_z=False, scale_y=True)
+    def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        return load_data(data_file, scaler_file, train_scaler_file=True, include_pos_z=False, scale_y=True, pos_limits=pos_limits)
 
     @staticmethod
-    def load_testing_data(data_file: str, scaler_file: str):
-        return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True)
+    def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True, pos_limits=pos_limits)
 
     def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):
         tf.random.set_seed(random_seed)

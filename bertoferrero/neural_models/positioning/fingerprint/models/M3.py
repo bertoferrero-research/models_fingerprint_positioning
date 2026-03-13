@@ -21,13 +21,13 @@ from .ModelsBaseClass import ModelsBaseClass
 
 class M3(ModelsBaseClass): 
     @staticmethod
-    def load_traning_data(data_file: str, scaler_file: str):
+    def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
         return load_data(data_file, scaler_file, train_scaler_file=True, include_pos_z=False,
-                        scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True)
+                        scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True, pos_limits=pos_limits)
 
     @staticmethod
-    def load_testing_data(data_file: str, scaler_file: str):
-        return load_data(data_file, scaler_file, include_pos_z=False, scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True)
+    def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        return load_data(data_file, scaler_file, include_pos_z=False, scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True, pos_limits=pos_limits)
 
     def build_model(self, empty_values: bool = False):
         pass

@@ -26,8 +26,8 @@ from bertoferrero.neural_models.positioning.fingerprint.trainingcommon import pl
 class M2FineTuner(BaseFineTuner):
     
     @staticmethod
-    def load_data_and_model(dataset_path, scaler_file, model_file):
-        X, y = M2.load_testing_data(dataset_path, scaler_file)
+    def load_data_and_model(dataset_path, scaler_file, model_file, pos_limits: dict = None):
+        X, y = M2.load_testing_data(dataset_path, scaler_file, pos_limits)
         model = tf.keras.models.load_model(model_file, custom_objects=ak.CUSTOM_OBJECTS)
         return X, y, model
 
