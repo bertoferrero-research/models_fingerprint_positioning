@@ -22,10 +22,32 @@ from .ModelsBaseClass import ModelsBaseClass
 class M5(ModelsBaseClass): 
     @staticmethod
     def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga y prepara los datos de entrenamiento para M5. Entrena y persiste el scaler RSSI.
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (X, y) con valores RSSI escalados y posiciones (pos_x, pos_y) escaladas.
+        """
         return load_data(data_file, scaler_file, train_scaler_file=True, include_pos_z=False, scale_y=True, pos_limits=pos_limits)
 
     @staticmethod
     def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga y prepara los datos de evaluación para M5. Aplica el scaler RSSI existente.
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (X, y) con valores RSSI escalados y posiciones (pos_x, pos_y) escaladas.
+        """
         return load_data(data_file, scaler_file, train_scaler_file=False, include_pos_z=False, scale_y=True, pos_limits=pos_limits)
 
     def build_model(self, empty_values: bool = False):

@@ -139,6 +139,24 @@ def load_data_inverse(data_file: str, scaler_file: str, train_scaler_file: bool 
 
 
 def prepare_data(data, include_pos_z: bool = True, scale_y: bool = False, remove_not_full_rows: bool = False, pos_limits: dict = None):
+    """
+    Separa un DataFrame en características (X) y etiquetas (y), aplicando opcionalmente
+    filtrado de filas incompletas y escalado de posiciones.
+
+    Args:
+        data (pd.DataFrame): Dataset completo. Las columnas 1-2 (o 1-3) contienen la posición
+            y las columnas 4 en adelante contienen los valores RSSI.
+        include_pos_z (bool, optional): Si es True, incluye pos_z en y. Por defecto True.
+        scale_y (bool, optional): Si es True, escala pos_x y pos_y mediante MinMaxScaler.
+        remove_not_full_rows (bool, optional): Si es True, reemplaza -200 por NaN en las
+            columnas RSSI antes de procesar.
+        pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}
+            utilizados cuando scale_y=True.
+
+    Returns:
+        tuple: (X, y) donde X es el DataFrame de RSSI (columnas ordenadas alfabéticamente)
+            e y el DataFrame de posiciones.
+    """
     # Eliminamos las filas que no tienen todos los datos
 
     if remove_not_full_rows:
@@ -260,6 +278,16 @@ def get_scaler_pos_y(mn: float = 0, mx: float = 17.64103475472807):
     return get_scaler_pos(mn, mx)
 
 def get_scaler_pos(mn: float, mx: float):
+    """
+    Crea y devuelve un MinMaxScaler ajustado al rango [mn, mx].
+
+    Args:
+        mn (float): Valor mínimo del rango de escalado.
+        mx (float): Valor máximo del rango de escalado.
+
+    Returns:
+        MinMaxScaler: Scaler ajustado al rango especificado.
+    """
     scaler = MinMaxScaler()
     scaler.fit([[mn], [mx]])
     return scaler

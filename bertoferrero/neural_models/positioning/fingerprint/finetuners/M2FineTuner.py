@@ -27,6 +27,18 @@ class M2FineTuner(BaseFineTuner):
     
     @staticmethod
     def load_data_and_model(dataset_path, scaler_file, model_file, pos_limits: dict = None):
+        """
+        Carga los datos de evaluación y el modelo guardado para fine-tuning de M2.
+
+        Args:
+            dataset_path (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            model_file (str): Ruta al fichero del modelo Keras guardado.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (X, y, model) con datos RSSI escalados, posiciones escaladas y modelo cargado.
+        """
         X, y = M2.load_testing_data(dataset_path, scaler_file, pos_limits)
         model = tf.keras.models.load_model(model_file, custom_objects=ak.CUSTOM_OBJECTS)
         return X, y, model

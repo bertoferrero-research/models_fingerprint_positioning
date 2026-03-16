@@ -22,10 +22,32 @@ class ModelsBaseClass:
 
     @staticmethod
     def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga los datos de entrenamiento del dataset. Debe ser implementado por las subclases.
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Raises:
+            NotImplementedError: Siempre, ya que debe ser implementado en las subclases.
+        """
         raise NotImplementedError
 
     @staticmethod
     def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga los datos de evaluación del dataset. Debe ser implementado por las subclases.
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Raises:
+            NotImplementedError: Siempre, ya que debe ser implementado en las subclases.
+        """
         raise NotImplementedError
         
     def build_model(self, random_seed:int, empty_values: bool = False, base_model_path: str = None, disable_dropouts: bool = False):

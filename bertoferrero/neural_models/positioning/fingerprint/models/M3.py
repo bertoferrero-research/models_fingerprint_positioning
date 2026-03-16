@@ -22,11 +22,37 @@ from .ModelsBaseClass import ModelsBaseClass
 class M3(ModelsBaseClass): 
     @staticmethod
     def load_traning_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga y prepara los datos de entrenamiento para M3. Entrena y persiste el scaler RSSI.
+        Incluye el mapa de sensores válidos para gestionar lecturas no válidas (valor 100).
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (X, y, Xmap) con valores RSSI escalados, posiciones (pos_x, pos_y) escaladas
+                y mapa de sensores válidos (1: válido, 0: no válido).
+        """
         return load_data(data_file, scaler_file, train_scaler_file=True, include_pos_z=False,
                         scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True, pos_limits=pos_limits)
 
     @staticmethod
     def load_testing_data(data_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Carga y prepara los datos de evaluación para M3. Aplica el scaler RSSI existente.
+        Incluye el mapa de sensores válidos para gestionar lecturas no válidas (valor 100).
+
+        Args:
+            data_file (str): Ruta al fichero CSV de datos.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (X, y, Xmap) con valores RSSI escalados, posiciones (pos_x, pos_y) escaladas
+                y mapa de sensores válidos (1: válido, 0: no válido).
+        """
         return load_data(data_file, scaler_file, include_pos_z=False, scale_y=True, not_valid_sensor_value=100, return_valid_sensors_map=True, pos_limits=pos_limits)
 
     def build_model(self, empty_values: bool = False):

@@ -24,6 +24,25 @@ import pandas as pd
 class M2Trainer(BaseTrainer):
     @staticmethod
     def train_model(dataset_path: str, scaler_file: str, tuner: str, tmp_dir: str, batch_size: int, designing: bool, overwrite: bool, max_trials:int = 100, random_seed: int = 42, hyperparams_log_path: str = None, pos_limits: dict = None):
+        """
+        Entrena el modelo M2 usando AutoKeras.
+
+        Args:
+            dataset_path (str): Ruta al fichero CSV de datos de entrenamiento.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            tuner (str): Tipo de tuner AutoKeras ('bayesian', 'hyperband', 'random').
+            tmp_dir (str): Directorio temporal para los artefactos de AutoKeras.
+            batch_size (int): Tamaño del batch de entrenamiento.
+            designing (bool): Si es True, modo diseño con búsqueda libre de hiperparámetros.
+            overwrite (bool): Si es True, sobreescribe búsquedas previas de AutoKeras.
+            max_trials (int, optional): Número máximo de trials para AutoKeras.
+            random_seed (int, optional): Semilla aleatoria para reproducibilidad.
+            hyperparams_log_path (str, optional): Ruta para registrar los hiperparámetros encontrados.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (model, score) con el modelo Keras exportado y la puntuación de evaluación.
+        """
                
         #Definimos el nombre del modelo
         modelName = 'M2'
@@ -56,6 +75,22 @@ class M2Trainer(BaseTrainer):
     
     @staticmethod
     def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False, pos_limits: dict = None):
+        """
+        Entrena el modelo M2 sin AutoKeras, usando la arquitectura fija.
+
+        Args:
+            dataset_path (str): Ruta al fichero CSV de datos de entrenamiento.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            batch_size (int): Tamaño del batch de entrenamiento.
+            empty_values (bool, optional): Si es True, adapta el modelo para datos con valores faltantes.
+            random_seed (int, optional): Semilla aleatoria para reproducibilidad.
+            base_model_path (str, optional): Ruta a un modelo base para transfer learning.
+            disable_dropouts (bool, optional): Si es True, desactiva las capas dropout.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (model, score) con el modelo entrenado y la puntuación de evaluación.
+        """
 
         #Cargamos los datos de entrenamiento
         X, y = M2.load_traning_data(dataset_path, scaler_file, pos_limits)
@@ -74,6 +109,19 @@ class M2Trainer(BaseTrainer):
     
     @staticmethod
     def prediction(dataset_path: str, model_file: str, scaler_file: str, pos_limits: dict = None):
+        """
+        Genera predicciones con el modelo M2 entrenado y evalúa su rendimiento.
+
+        Args:
+            dataset_path (str): Ruta al fichero CSV de datos de evaluación.
+            model_file (str): Ruta al fichero del modelo Keras guardado.
+            scaler_file (str): Ruta del fichero scaler para RSSI.
+            pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+
+        Returns:
+            tuple: (predictions, output_data, formated_metrics) donde predictions y output_data
+                son arrays desescalados y formated_metrics contiene 'loss_mse' y 'accuracy'.
+        """
         #Cargamos los datos de entrenamiento
         input_data, output_data = M2.load_testing_data(dataset_path, scaler_file, pos_limits)
         output_data = output_data.to_numpy()
