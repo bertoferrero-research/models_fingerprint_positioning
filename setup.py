@@ -16,10 +16,10 @@ from setuptools import setup, find_packages
 
 setup(
     name='bertoferrero-positioning-fingerprint',
-    version='0.4.0',
+    version='0.4.3',
     packages=find_packages(),
     install_requires=[
-        'tensorflow==2.15.0',
+        'tensorflow',
         'scikit-learn',
         'autokeras==1.1.0',
         'keras-tuner'
