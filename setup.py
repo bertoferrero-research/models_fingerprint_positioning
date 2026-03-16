@@ -22,7 +22,8 @@ setup(
         'tensorflow>=2.10,<2.16',
         'scikit-learn',
         'autokeras==1.1.0',
-        'keras-tuner'
+        'keras-tuner',
+        'keras-nlp<0.7.0'
     ],
     license='Apache License 2.0', 
     classifiers=[
