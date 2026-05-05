@@ -84,7 +84,7 @@ class M4Trainer(BaseTrainer):
 
         return model, score
     
-    staticmethod
+    @staticmethod
     def train_model_noautoml(
         dataset_path: str,
         scaler_file: str,
