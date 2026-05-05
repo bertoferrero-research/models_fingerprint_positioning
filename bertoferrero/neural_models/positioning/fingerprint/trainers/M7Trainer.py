@@ -64,8 +64,17 @@ class M7Trainer(BaseTrainer):
 
         return model, score
     
-    @staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False):
+    staticmethod
+    def train_model_noautoml(
+        dataset_path: str,
+        scaler_file: str,
+        batch_size: int,
+        empty_values: bool = False,
+        random_seed: int = 42,
+        base_model_path: str = None,
+        disable_dropouts: bool = False,
+        pos_limits: dict = None,
+        sample_weight = None):       
 
         cell_amount_x = 7
         cell_amount_y = 6
@@ -84,7 +93,7 @@ class M7Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', min_delta=0.0001, patience=10, restore_best_weights=True)
-        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)      
+        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed, sample_weight=sample_weight)      
     
     
 

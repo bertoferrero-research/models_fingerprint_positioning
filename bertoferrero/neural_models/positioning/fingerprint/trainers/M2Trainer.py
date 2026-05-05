@@ -74,7 +74,16 @@ class M2Trainer(BaseTrainer):
         return model, score
     
     @staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False, pos_limits: dict = None):
+    def train_model_noautoml(
+        dataset_path: str,
+        scaler_file: str,
+        batch_size: int,
+        empty_values: bool = False,
+        random_seed: int = 42,
+        base_model_path: str = None,
+        disable_dropouts: bool = False,
+        pos_limits: dict = None,
+        sample_weight = None):
         """
         Entrena el modelo M2 sin AutoKeras, usando la arquitectura fija.
 
@@ -87,6 +96,7 @@ class M2Trainer(BaseTrainer):
             base_model_path (str, optional): Ruta a un modelo base para transfer learning.
             disable_dropouts (bool, optional): Si es True, desactiva las capas dropout.
             pos_limits (dict, optional): Límites de posición {'min_x', 'max_x', 'min_y', 'max_y'}.
+            sample_weight: Pesos de muestra para el entrenamiento.
 
         Returns:
             tuple: (model, score) con el modelo entrenado y la puntuación de evaluación.
@@ -103,7 +113,7 @@ class M2Trainer(BaseTrainer):
 
         #Entrenamos
         callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, restore_best_weights=True)
-        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed)
+        return BaseTrainer.fit_general(model, X, y, False, batch_size, callbacks=[callback], random_seed=random_seed, sample_weight=sample_weight)
 
         
     

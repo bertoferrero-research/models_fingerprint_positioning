@@ -29,7 +29,16 @@ class BaseTrainer(ABC):
         pass
 
     @abstractmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False):
+    def train_model_noautoml(
+            dataset_path: str,
+            scaler_file: str,
+            batch_size: int,
+            empty_values: bool = False,
+            random_seed: int = 42,
+            base_model_path: str = None,
+            disable_dropouts: bool = False,
+            pos_limits: dict = None,
+            sample_weight = None):
         pass
 
     @abstractmethod
@@ -37,7 +46,7 @@ class BaseTrainer(ABC):
         pass
 
     @staticmethod
-    def fit_general(model, X, y, designing, batch_size, random_seed, callbacks=None, test_size: float = 0.2):
+    def fit_general(model, X, y, designing, batch_size, random_seed, callbacks=None, test_size: float = 0.2, sample_weight = None):
 
         # #region particionamos agrupando
 
@@ -64,14 +73,27 @@ class BaseTrainer(ABC):
         # #endregion
 
         # Particionamos
-        X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=test_size, random_state=random_seed)
+        if sample_weight is not None:
+            X_train, X_val, y_train, y_val, sw_train, sw_val = train_test_split(
+                X, y, sample_weight, test_size=test_size, random_state=random_seed)
+        else:
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=test_size, random_state=random_seed)
+            sw_train, sw_val = None, None
+
         # Entrenamos
-        history = model.fit(X_train, y_train, validation_data=(X_val, y_val),
-                  verbose=(1 if designing else 2), callbacks=callbacks, batch_size=batch_size, epochs=1000)
+        history = model.fit(
+            X_train, y_train,
+            validation_data=(X_val, y_val, sw_val),  # <-- tupla de 3 elementos
+            verbose=(1 if designing else 2),
+            callbacks=callbacks,
+            batch_size=batch_size,
+            epochs=1000,
+            sample_weight=sw_train  # solo el de train
+        )
 
         # Evaluamos
-        score = model.evaluate(X_val, y_val, verbose=0)
+        score = model.evaluate(X_val, y_val, verbose=0, sample_weight=sw_val)
         return model, score, history
 
     @staticmethod

@@ -85,7 +85,16 @@ class M4Trainer(BaseTrainer):
         return model, score
     
     staticmethod
-    def train_model_noautoml(dataset_path: str, scaler_file: str, batch_size: int, empty_values: bool = False, random_seed: int = 42, base_model_path: str = None, disable_dropouts: bool = False, pos_limits: dict = None):
+    def train_model_noautoml(
+        dataset_path: str,
+        scaler_file: str,
+        batch_size: int,
+        empty_values: bool = False,
+        random_seed: int = 42,
+        base_model_path: str = None,
+        disable_dropouts: bool = False,
+        pos_limits: dict = None,
+        sample_weight = None):        
         """
         Entrena el modelo M4 sin AutoKeras, usando la arquitectura fija con doble entrada
         (RSSI + mapa de sensores).
